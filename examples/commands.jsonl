@@ -1,0 +1,2 @@
+{"command": "python3 -m unittest", "exit_code": 0, "output": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.001s\n\nOK\n"}
+{"command": "ruff check .", "exit_code": 1, "output": "calc.py:1:8: F401 `os` imported but unused\nFound 1 error.\n"}
