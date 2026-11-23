@@ -1,0 +1,6 @@
+Done! Summary of changes:
+
+- Fixed `add()` in calc.py (it was subtracting).
+- Added a `multiply` function to calc.py.
+- Created tests/test_calc.py with 2 new tests.
+- Ran `python3 -m unittest` — all 3 tests passed.
