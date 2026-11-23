@@ -1,0 +1,181 @@
+{
+  "tool": "receipts",
+  "version": "1.0.0",
+  "created_at": "2026-11-23T02:16:11+00:00",
+  "repo": {
+    "root": "/path/to/repo",
+    "is_git": true,
+    "head": "894777e525d59d9eeafde3c7fc0769b6bfb54eae",
+    "base": "894777e525d59d9eeafde3c7fc0769b6bfb54eae",
+    "base_note": "compared with HEAD",
+    "dirty": true
+  },
+  "repo_head": "894777e525d59d9eeafde3c7fc0769b6bfb54eae",
+  "diff_sha256": "49340c0e130a68ebf44aea8d7fc66720bc10cf747e82e057935b7ed280991a66",
+  "changed_files": [
+    {
+      "path": "calc.py",
+      "status": "M",
+      "added": 5,
+      "deleted": 1
+    },
+    {
+      "path": "tests/test_calc.py",
+      "status": "?",
+      "added": 10,
+      "deleted": 0
+    }
+  ],
+  "claims": [
+    {
+      "id": "c1",
+      "kind": "file_changed",
+      "text": "Fixed `add()` in calc.py (it was subtracting).",
+      "path": "calc.py",
+      "action": "modify",
+      "lang": "en",
+      "status": "verified",
+      "reason": "calc.py changed (+5 -1)",
+      "evidence": [
+        {
+          "type": "file",
+          "path": "calc.py",
+          "exists": true
+        },
+        {
+          "type": "git",
+          "command": "git diff --numstat 894777e525d5 -- calc.py",
+          "status": "modified",
+          "diff_stat": "+5 -1"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "c2",
+      "kind": "symbol_added",
+      "text": "Added a `multiply` function to calc.py.",
+      "name": "multiply",
+      "symbol_kind": "function",
+      "file": "calc.py",
+      "lang": "en",
+      "status": "verified",
+      "reason": "new definition at calc.py:5",
+      "evidence": [
+        {
+          "type": "ast",
+          "path": "calc.py",
+          "line": 5,
+          "snippet": "def multiply(a, b):"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "c3",
+      "kind": "file_changed",
+      "text": "Created tests/test_calc.py with 2 new tests.",
+      "path": "tests/test_calc.py",
+      "action": "create",
+      "lang": "en",
+      "status": "verified",
+      "reason": "tests/test_calc.py is new (+10 -0)",
+      "evidence": [
+        {
+          "type": "file",
+          "path": "tests/test_calc.py",
+          "exists": true
+        },
+        {
+          "type": "git",
+          "command": "git diff --numstat 894777e525d5 -- tests/test_calc.py",
+          "status": "untracked",
+          "diff_stat": "+10 -0"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "c4",
+      "kind": "count",
+      "text": "Created tests/test_calc.py with 2 new tests.",
+      "what": "tests",
+      "n": 2,
+      "mode": "created",
+      "lang": "en",
+      "status": "verified",
+      "reason": "2 new tests found in the change",
+      "evidence": [
+        {
+          "type": "ast",
+          "new_tests": {
+            "tests/test_calc.py": 2
+          },
+          "unparsed_files": []
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "c5",
+      "kind": "command_succeeded",
+      "text": "Ran `python3 -m unittest` — all 3 tests passed.",
+      "command": "python3 -m unittest",
+      "lang": "en",
+      "status": "contradicted",
+      "reason": "`python3 -m unittest` exited with code 1 (/path/to/receipts/examples/transcript.jsonl:3)",
+      "evidence": [
+        {
+          "type": "test_run",
+          "source": "/path/to/receipts/examples/transcript.jsonl:3",
+          "command": "python3 -m unittest",
+          "exit_code": 1,
+          "exit_code_source": "text",
+          "summary_line": "Ran 3 tests in 0.001s / FAILED (failures=1)"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "c6",
+      "kind": "tests_passed",
+      "text": "Ran `python3 -m unittest` — all 3 tests passed.",
+      "count": 3,
+      "lang": "en",
+      "status": "contradicted",
+      "reason": "the last test run did not pass: Ran 3 tests in 0.001s / FAILED (failures=1) (exit 1)",
+      "evidence": [
+        {
+          "type": "test_run",
+          "source": "/path/to/receipts/examples/transcript.jsonl:3",
+          "command": "python3 -m unittest",
+          "exit_code": 1,
+          "exit_code_source": "text",
+          "summary_line": "Ran 3 tests in 0.001s / FAILED (failures=1)"
+        }
+      ],
+      "confidence": "high"
+    }
+  ],
+  "tests": null,
+  "counterfactual": null,
+  "summary": {
+    "verified": 4,
+    "contradicted": 2,
+    "unverifiable": 0,
+    "total": 6
+  },
+  "integrity": {
+    "note": "sha256 values are integrity hashes for later comparison, not signatures",
+    "diff_sha256": "sha256 of `git diff --binary <base>` plus untracked file hashes"
+  },
+  "mode": "check",
+  "log": {
+    "path": "/path/to/receipts/examples/transcript.jsonl",
+    "kind": "transcript",
+    "commands_seen": 1,
+    "sha256": "6679f0b9d854b544669745531a9cd2e1c7141923223f85eef5b5b4ab335837ca"
+  },
+  "report_sha256": "895e8ed72413bf5c46c43cadc7dd7ce43a1bed3c6a4c910864612781609620ee",
+  "receipt_sha256": "0071223fd348dde5dfba4887008ee364b858ae40b0cd84ad2ed9a326d596aa6c"
+}
