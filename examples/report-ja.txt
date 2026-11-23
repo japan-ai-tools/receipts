@@ -1,0 +1,6 @@
+完了しました。
+
+- calc.py の `add()` を修正しました(引き算になっていました)。
+- calc.py に関数 `multiply` を追加しました。
+- tests/test_calc.py を新規作成し、テストを2件追加しました。
+- `python3 -m unittest` を実行し、テスト 3 件すべてパスしました。
