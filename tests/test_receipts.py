@@ -654,3 +654,31 @@ class ExitCodeTests(RepoCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GeneratedFilesTests(RepoCase):
+    """A repo with no .gitignore: bytecode written by a test run must not change the receipt's diff fingerprint."""
+
+    def setUp(self):
+        super().setUp()
+        os.remove(os.path.join(self.repo, ".gitignore"))
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-q", "-m", "no ignore")
+
+    def test_pyc_does_not_change_fingerprint_or_claims(self):
+        write(self.repo, "calc.py", "def add(a, b):\n    return a + b\n")
+        r1 = self.check("Created calc.py.")
+        write(self.repo, "__pycache__/calc.cpython-313.pyc", "\x00bytecode")
+        write(self.repo, "pkg/__pycache__/x.pyc", "\x00")
+        write(self.repo, ".pytest_cache/v/cache/lastfailed", "{}")
+        r2 = self.check("Created calc.py.")
+        self.assertEqual(r1["diff_sha256"], r2["diff_sha256"])
+        self.assertEqual(self.statuses(r2), ["verified"])
+        write(self.repo, "notes.txt", "real new file")
+        self.assertNotEqual(r1["diff_sha256"], self.check("Created calc.py.")["diff_sha256"])
+
+    def test_generated_pattern(self):
+        for p in ("__pycache__/a.pyc", "x/__pycache__/a.cpython-311.pyc", "a.pyo", ".pytest_cache/v/x", ".coverage"):
+            self.assertTrue(receipts.GENERATED_RE.search(p), p)
+        for p in ("pycache.py", "src/cache.py", "coverage.md", "tests/test_x.py"):
+            self.assertFalse(receipts.GENERATED_RE.search(p), p)
