@@ -36,7 +36,7 @@ import time
 import unicodedata
 
 TOOL = "receipts"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 EXIT_OK = 0
 EXIT_CONTRADICTED = 1
@@ -47,6 +47,9 @@ EXIT_SAFETY = 4
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 DEFAULT_OUT = "receipt.json"
 MAX_SCAN_FILES = 5000
+# Files a test run writes by itself (bytecode, tool caches). Never claims, and they must not change the diff
+# fingerprint between `check` and a later `counterfactual` when the repo has no .gitignore for them.
+GENERATED_RE = re.compile(r"(^|/)(__pycache__|\.pytest_cache|\.mypy_cache|\.ruff_cache|\.tox|\.hypothesis)/|\.py[co]$|(^|/)\.coverage$")
 MAX_FILE_BYTES = 2_000_000
 OUTPUT_TAIL = 4000
 
@@ -223,7 +226,7 @@ class Repo:
         code, out, _ = git_run(self.root, ["ls-files", "--others", "--exclude-standard", "-z"])
         if code != 0:
             return []
-        return [p for p in out.decode("utf-8", "replace").split("\0") if p]
+        return [p for p in out.decode("utf-8", "replace").split("\0") if p and not GENERATED_RE.search(p)]
 
     def tracked(self):
         code, out, _ = git_run(self.root, ["ls-files", "-z"])
@@ -471,6 +474,27 @@ def parse_test_output(text):
     return res
 
 
+def _kill_tree(proc):
+    """Kill the shell and everything it started. POSIX: the process group. Windows: taskkill /T."""
+    killpg = getattr(os, "killpg", None)
+    if killpg is not None:
+        try:
+            killpg(proc.pid, signal.SIGKILL)
+            return
+        except OSError:
+            pass
+    elif os.name == "nt":
+        try:
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    try:
+        proc.kill()
+    except OSError:
+        pass
+
+
 def run_command(cmd, cwd, timeout, extra_env=None):
     """Run a shell command (the user's own test command). Never raises on failure."""
     env = dict(os.environ)
@@ -488,11 +512,12 @@ def run_command(cmd, cwd, timeout, extra_env=None):
         out, _ = proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         timed_out = True
+        _kill_tree(proc)
         try:
-            os.killpg(proc.pid, signal.SIGKILL)
-        except OSError:
-            proc.kill()
-        out, _ = proc.communicate()
+            out, _ = proc.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            # A grandchild still holds the pipe open; give up on the rest of the output.
+            out = b""
     text = (out or b"").decode("utf-8", "replace")
     return {"command": cmd, "exit_code": proc.returncode if not timed_out else None,
             "timed_out": timed_out, "duration_s": round(time.time() - start, 3), "output": text}
@@ -1580,8 +1605,10 @@ def run_check(text, repo_path=".", base=None, log_path=None, run_tests_cmd=None,
         repo.agent_committed = any(re.search(r"\bgit\b[^|;&]*\bcommit\b", r.get("command") or "")
                                    for r in log["runs"])
     if log:
+        with open(log_path, "rb") as fh:
+            log_sha = sha256_bytes(fh.read())
         receipt["log"] = {"path": log_path, "kind": log["kind"], "commands_seen": len(log["runs"]),
-                          "sha256": sha256_bytes(open(log_path, "rb").read())}
+                          "sha256": log_sha}
     claims = extract_claims(text)
     receipt["report_sha256"] = sha256_text(text)
     receipt["claims"] = verify_claims(claims, repo, fresh, log)
