@@ -10,7 +10,7 @@ Works with any agent that can run a shell command; ships a Stop hook for Claude 
 ```text
 report: Fixed add() in calc.py and added tests/test_calc.py. All 3 tests passed.
 
-receipts 1.0.0: 3 claims - 1 verified, 2 contradicted, 0 unverifiable
+receipts 1.0.1: 3 claims - 1 verified, 2 contradicted, 0 unverifiable
   [CONTRADICTED] file_changed: tests/test_calc.py does not exist
   [CONTRADICTED] tests_passed: claimed 3 tests passed, the last run shows 1 (Ran 1 test in 0.000s / OK)
   [VERIFIED] file_changed: calc.py changed (+1 -1)
@@ -108,6 +108,10 @@ come from the same author, so treat this as a sanity check, not an independent e
 python3 -m unittest discover -s tests -v
 python3 bench/run.py
 ```
+
+Changes: 1.0.1 (2026-11-27) — on Windows, a test command that hit `--timeout` crashed receipts
+(`os.killpg` does not exist there). It now stops the whole process tree with `taskkill /T` and
+records `timed_out: true`. The full test suite (61 tests) passes on Windows 11 / Python 3.14.
 
 ## License
 
